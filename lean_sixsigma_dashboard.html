@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lean Six Sigma · Impact Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --surface-2: #f8f8f5;
+    --border: #e5e5df;
+    --border-2: #d4d4cc;
+    --text-1: #1a1a18;
+    --text-2: #5a5a54;
+    --text-3: #9a9a92;
+    --emerald: #059669;
+    --emerald-light: #d1fae5;
+    --emerald-mid: #6ee7b7;
+    --rose: #f43f5e;
+    --rose-light: #ffe4e6;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --violet: #7c3aed;
+    --violet-light: #ede9fe;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text-1);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--text-1);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 16px; height: 16px; }
+
+  .header-title { font-size: 14px; font-weight: 600; color: var(--text-1); letter-spacing: -0.01em; }
+  .header-sub { font-size: 11px; color: var(--text-3); }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  select, input {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-1);
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  select:focus, input:focus { border-color: var(--emerald); }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 1360px; margin: 0 auto; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 12px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.10s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.20s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .kpi-top { display: flex; align-items: center; justify-content: space-between; }
+  .kpi-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .kpi-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+  .kpi-value { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+  .c-emerald .kpi-icon { background: var(--emerald-light); }
+  .c-emerald .kpi-value { color: var(--emerald); }
+  .c-blue .kpi-icon { background: var(--blue-light); }
+  .c-blue .kpi-value { color: var(--blue); }
+  .c-violet .kpi-icon { background: var(--violet-light); }
+  .c-violet .kpi-value { color: var(--violet); }
+  .c-rose .kpi-icon { background: var(--rose-light); }
+  .c-rose .kpi-value { color: var(--rose); }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    animation: fadeUp 0.4s ease 0.25s both;
+  }
+
+  .panel-header {
+    padding: 18px 22px 0;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  .tab-group { display: flex; gap: 2px; padding-bottom: 0; }
+
+  .tab {
+    font-family: var(--sans);
+    font-size: 12px; font-weight: 500;
+    color: var(--text-3);
+    background: none; border: none; cursor: pointer;
+    padding: 8px 14px 12px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text-1); }
+  .tab.active { color: var(--text-1); border-bottom-color: var(--text-1); }
+
+  .chart-area { padding: 20px 22px; }
+  .chart-caption { font-size: 11px; color: var(--text-3); margin-bottom: 14px; }
+  .chart-wrap { position: relative; }
+
+  /* ── BOTTOM ROW ── */
+  .bottom-row { display: grid; grid-template-columns: 1fr 340px; gap: 14px; animation: fadeUp 0.4s ease 0.3s both; }
+
+  /* ── TABLE ── */
+  .table-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+
+  .table-header {
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-title { font-size: 13px; font-weight: 600; }
+
+  .search-wrap { position: relative; }
+  .search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: var(--text-3); }
+  .search-wrap input { padding-left: 28px; width: 180px; }
+
+  .table-scroll { overflow-y: auto; max-height: 420px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead { position: sticky; top: 0; z-index: 2; background: var(--surface-2); }
+  th {
+    padding: 10px 14px; text-align: left;
+    font-size: 10px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; white-space: nowrap; user-select: none;
+  }
+  th:hover { color: var(--text-1); }
+  th .sort-icon { display: inline-block; margin-left: 4px; opacity: 0.5; }
+  th.sorted .sort-icon { opacity: 1; color: var(--emerald); }
+
+  td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--text-1);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9f9f7; }
+
+  .td-id { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+  .td-name { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .val-good { color: var(--emerald); font-weight: 600; }
+  .val-mid  { color: var(--blue); font-weight: 600; }
+  .val-bad  { color: var(--rose); font-weight: 600; }
+
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; }
+  .badge {
+    font-size: 9px; font-weight: 600;
+    padding: 2px 7px; border-radius: 100px;
+    white-space: nowrap;
+  }
+  .badge-savings  { background: var(--emerald-light); color: #065f46; border: 1px solid #a7f3d0; }
+  .badge-defect   { background: var(--rose-light);    color: #9f1239; border: 1px solid #fecdd3; }
+  .badge-lead     { background: var(--blue-light);    color: #1e40af; border: 1px solid #bfdbfe; }
+  .badge-warning  { background: var(--amber-light);   color: #92400e; border: 1px solid #fde68a; }
+
+  .table-footer {
+    padding: 10px 20px;
+    font-size: 11px; color: var(--text-3);
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar { display: flex; flex-direction: column; gap: 12px; }
+
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+
+  .insight-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .insight-head svg { width: 14px; height: 14px; }
+  .insight-title { font-size: 12px; font-weight: 600; }
+
+  .performer {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px; border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .performer:last-child { margin-bottom: 0; }
+  .performer-top { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .performer-low { background: #fff1f2; border: 1px solid #fecdd3; }
+
+  .rank {
+    width: 20px; height: 20px; border-radius: 50%;
+    font-size: 10px; font-weight: 700; color: white;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .rank-gold { background: #059669; }
+  .rank-warn {
+    background: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rank-warn svg { width: 16px; height: 16px; color: var(--rose); }
+
+  .perf-name { font-size: 11px; font-weight: 600; color: var(--text-1); }
+  .perf-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .perf-stat { font-size: 10px; color: var(--emerald); }
+  .perf-stat-bad { font-size: 10px; color: var(--rose); }
+
+  .dark-card {
+    background: var(--text-1);
+    border-radius: var(--radius);
+    padding: 18px;
+    color: white;
+  }
+  .dark-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dark-card-head svg { width: 14px; height: 14px; }
+  .dark-card-title { font-size: 12px; font-weight: 600; color: white; }
+  .dark-card-body { font-size: 11px; line-height: 1.7; color: #a3a39a; }
+  .dark-card-body em { color: var(--emerald-mid); font-style: normal; font-weight: 600; }
+  .dark-card-body strong { color: #fda4af; font-weight: 600; }
+
+  /* ── CHART LEGEND ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .main { padding: 16px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .header { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="2,12 6,7 10,9 14,3"/>
+        <polyline points="11,3 14,3 14,6"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title">Lean Six Sigma &nbsp;·&nbsp; Impact Dashboard</div>
+      <div class="header-sub">Automotive Components &nbsp;·&nbsp; 30 Units Analysed</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <select id="categoryFilter" onchange="applyFilters()">
+      <option value="All">All Components</option>
+      <option>Axle Housing</option>
+      <option>Clutch Plate</option>
+      <option>Crankshaft</option>
+      <option>Fuel Injector</option>
+      <option>Gear Shaft</option>
+      <option>Radiator Assembly</option>
+      <option>Suspension Arm</option>
+      <option>Transmission Case</option>
+    </select>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card c-emerald">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Labour Savings</span>
+        <div class="kpi-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+      <div><div class="kpi-value" id="kpi-savings">—</div><div class="kpi-sub">Combined cost reduction</div></div>
+    </div>
+    <div class="kpi-card c-blue">
+      <div class="kpi-top">
+        <span class="kpi-label">Avg Lead Time Reduction</span>
+        <div class="kpi-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+      </div>
+      <div><div class="kpi-value" id="kpi-lt">—</div><div class="kpi-sub">Faster delivery cycles</div></div>
+    </div>
+    <div class="kpi-card c-violet">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Defects Prevented</span>
+        <div class="kpi-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+      </div>
+      <div><div class="kpi-value" id="kpi-def">—</div><div class="kpi-sub">Units saved from defect</div></div>
+    </div>
+    <div class="kpi-card c-rose">
+      <div class="kpi-top">
+        <span class="kpi-label">Process Efficiency Gain</span>
+        <div class="kpi-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+      </div>
+      <div><div class="kpi-value" id="kpi-eff">—</div><div class="kpi-sub">Avg defect reduction rate</div></div>
+    </div>
+  </div>
+
+  <!-- CHARTS PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="tab-group">
+        <button class="tab active" onclick="switchTab(this,'leadtime')">Lead Time Efficiency</button>
+        <button class="tab" onclick="switchTab(this,'financial')">Financial Impact</button>
+        <button class="tab" onclick="switchTab(this,'quality')">Quality Transformation</button>
+      </div>
+    </div>
+    <div class="chart-area">
+      <!-- Lead Time -->
+      <div id="tab-leadtime">
+        <p class="chart-caption">Lead time (days) before vs. after Six Sigma — by component ID</p>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch" style="background:#cbd5e1"></span>Before</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#059669"></span>After</span>
+        </div>
+        <div class="chart-wrap" style="height:280px"><canvas id="chartLT"></canvas></div>
+      </div>
+      <!-- Financial -->
+      <div id="tab-financial" style="display:none">
+        <p class="chart-caption">Total labour cost savings per component category (₹)</p>
+        <div class="chart-wrap" style="height:280px"><canvas id="chartFin"></canvas></div>
+      </div>
+      <!-- Quality -->
+      <div id="tab-quality" style="display:none">
+        <p class="chart-caption">Defect count before vs. after — rose bars indicate residual quality risk</p>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch" style="background:#fda4af"></span>Before</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#f43f5e"></span>After</span>
+        </div>
+        <div class="chart-wrap" style="height:280px"><canvas id="chartQual"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
+
+    <!-- TABLE -->
+    <div class="table-panel">
+      <div class="table-header">
+        <span class="table-title">Component Explorer</span>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchBox" placeholder="Search component…" oninput="applyFilters()" />
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortTable('id')" id="th-id">ID <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable('name')" id="th-name">Component <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable('ltImprovement')" id="th-ltImprovement">LT Reduction % <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable('laborSavings')" id="th-laborSavings">Labour Savings <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable('defReduction')" id="th-defReduction">Defect Reduction % <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable('defPrevented')" id="th-defPrevented">Defects Prevented <span class="sort-icon">↕</span></th>
+              <th>Badges</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="tableFooter"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="insight-card">
+        <div class="insight-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+          <span class="insight-title">Top 3 Performers</span>
+        </div>
+        <div id="top3"></div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="insight-title">Areas for Improvement</span>
+        </div>
+        <div id="bottom3"></div>
+      </div>
+
+      <div class="dark-card">
+        <div class="dark-card-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span class="dark-card-title">Key Insight</span>
+        </div>
+        <p class="dark-card-body">
+          <em>Transmission Case &amp; Crankshaft</em> deliver the highest labour savings per hour.
+          Prioritising further Six Sigma cycles on <strong>Suspension Arm</strong> and <strong>Fuel Injector</strong>
+          could yield the largest residual quality gains.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const RAW = [
+  {id:"C001",name:"Radiator Assembly",ltB:12,ltA:9,hS:33,rate:293,dB:61,dA:5},
+  {id:"C002",name:"Fuel Injector",ltB:5,ltA:2,hS:11,rate:760,dB:203,dA:164},
+  {id:"C003",name:"Radiator Assembly",ltB:6,ltA:1,hS:37,rate:614,dB:140,dA:60},
+  {id:"C004",name:"Gear Shaft",ltB:14,ltA:8,hS:32,rate:592,dB:124,dA:5},
+  {id:"C005",name:"Fuel Injector",ltB:13,ltA:5,hS:35,rate:333,dB:100,dA:5},
+  {id:"C006",name:"Suspension Arm",ltB:12,ltA:4,hS:31,rate:294,dB:296,dA:264},
+  {id:"C007",name:"Clutch Plate",ltB:9,ltA:2,hS:20,rate:537,dB:144,dA:31},
+  {id:"C008",name:"Clutch Plate",ltB:13,ltA:6,hS:12,rate:313,dB:261,dA:222},
+  {id:"C009",name:"Suspension Arm",ltB:8,ltA:6,hS:36,rate:560,dB:154,dA:113},
+  {id:"C010",name:"Gear Shaft",ltB:8,ltA:1,hS:35,rate:267,dB:221,dA:200},
+  {id:"C011",name:"Axle Housing",ltB:14,ltA:10,hS:15,rate:495,dB:225,dA:26},
+  {id:"C012",name:"Transmission Case",ltB:6,ltA:1,hS:12,rate:495,dB:67,dA:5},
+  {id:"C013",name:"Axle Housing",ltB:7,ltA:3,hS:32,rate:492,dB:233,dA:171},
+  {id:"C014",name:"Axle Housing",ltB:8,ltA:1,hS:5,rate:294,dB:110,dA:5},
+  {id:"C015",name:"Axle Housing",ltB:14,ltA:11,hS:34,rate:537,dB:139,dA:5},
+  {id:"C016",name:"Radiator Assembly",ltB:6,ltA:2,hS:31,rate:353,dB:107,dA:5},
+  {id:"C017",name:"Crankshaft",ltB:7,ltA:2,hS:39,rate:775,dB:107,dA:58},
+  {id:"C018",name:"Fuel Injector",ltB:5,ltA:3,hS:5,rate:765,dB:146,dA:94},
+  {id:"C019",name:"Fuel Injector",ltB:6,ltA:2,hS:9,rate:517,dB:261,dA:212},
+  {id:"C020",name:"Fuel Injector",ltB:12,ltA:9,hS:13,rate:496,dB:204,dA:64},
+  {id:"C021",name:"Crankshaft",ltB:13,ltA:11,hS:11,rate:520,dB:191,dA:168},
+  {id:"C022",name:"Fuel Injector",ltB:9,ltA:8,hS:33,rate:364,dB:174,dA:86},
+  {id:"C023",name:"Gear Shaft",ltB:19,ltA:14,hS:32,rate:332,dB:119,dA:82},
+  {id:"C024",name:"Clutch Plate",ltB:15,ltA:14,hS:14,rate:250,dB:148,dA:5},
+  {id:"C025",name:"Fuel Injector",ltB:16,ltA:14,hS:29,rate:559,dB:123,dA:5},
+  {id:"C026",name:"Gear Shaft",ltB:6,ltA:5,hS:11,rate:726,dB:204,dA:89},
+  {id:"C027",name:"Transmission Case",ltB:7,ltA:6,hS:21,rate:659,dB:60,dA:5},
+  {id:"C028",name:"Transmission Case",ltB:7,ltA:4,hS:31,rate:647,dB:186,dA:159},
+  {id:"C029",name:"Gear Shaft",ltB:13,ltA:11,hS:37,rate:423,dB:270,dA:70},
+  {id:"C030",name:"Crankshaft",ltB:17,ltA:10,hS:32,rate:522,dB:64,dA:5},
+];
+
+const CAT_COLORS = {
+  "Radiator Assembly":"#059669","Fuel Injector":"#2563eb","Gear Shaft":"#7c3aed",
+  "Suspension Arm":"#d97706","Clutch Plate":"#db2777","Axle Housing":"#0d9488",
+  "Transmission Case":"#ea580c","Crankshaft":"#64748b"
+};
+
+function compute(r) {
+  return { ...r,
+    ltImprovement: (r.ltB - r.ltA) / r.ltB * 100,
+    laborSavings:  r.hS * r.rate,
+    defReduction:  (r.dB - r.dA) / r.dB * 100,
+    defPrevented:  r.dB - r.dA,
+  };
+}
+const ALL = RAW.map(compute);
+
+const fmt = n => new Intl.NumberFormat('en-IN').format(Math.round(n));
+const pct = n => n.toFixed(1) + '%';
+const fmtINR = n => '₹' + fmt(n);
+
+let sortCol = 'laborSavings', sortDir = -1;
+let chartLT, chartFin, chartQual;
+
+function getBadges(r) {
+  const b = [];
+  if (r.laborSavings > 20000)   b.push(['High Savings','badge-savings']);
+  if (r.defReduction > 80)       b.push(['Critical Defect Reduction','badge-defect']);
+  if (r.ltImprovement > 70)      b.push(['Fast Lead Time','badge-lead']);
+  if (r.defReduction < 20 || r.ltImprovement < 15) b.push(['Needs Attention','badge-warning']);
+  return b;
+}
+
+function getFiltered() {
+  const cat   = document.getElementById('categoryFilter').value;
+  const query = document.getElementById('searchBox').value.toLowerCase().trim();
+  return ALL.filter(r =>
+    (cat === 'All' || r.name === cat) &&
+    (!query || r.id.toLowerCase().includes(query) || r.name.toLowerCase().includes(query))
+  ).sort((a, b) => {
+    const av = a[sortCol], bv = b[sortCol];
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+}
+
+function updateKPIs(data) {
+  const totalSav = data.reduce((s,r) => s + r.laborSavings, 0);
+  const avgLT    = data.reduce((s,r) => s + r.ltImprovement, 0) / data.length;
+  const totalDef = data.reduce((s,r) => s + r.defPrevented, 0);
+  const avgEff   = data.reduce((s,r) => s + r.defReduction, 0) / data.length;
+  document.getElementById('kpi-savings').textContent = fmtINR(totalSav);
+  document.getElementById('kpi-lt').textContent      = pct(avgLT);
+  document.getElementById('kpi-def').textContent     = fmt(totalDef);
+  document.getElementById('kpi-eff').textContent     = pct(avgEff);
+}
+
+function updateTable(data) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = data.map(r => {
+    const badges = getBadges(r).map(([l,c]) => `<span class="badge ${c}">${l}</span>`).join('');
+    const ltCls  = r.ltImprovement > 60 ? 'val-good' : r.ltImprovement > 30 ? 'val-mid' : 'val-bad';
+    const drCls  = r.defReduction > 80  ? 'val-good' : r.defReduction > 50  ? 'val-mid' : 'val-bad';
+    return `<tr>
+      <td class="td-id">${r.id}</td>
+      <td><span class="td-name"><span class="dot" style="background:${CAT_COLORS[r.name]||'#94a3b8'}"></span>${r.name}</span></td>
+      <td class="${ltCls}">${pct(r.ltImprovement)}</td>
+      <td>${fmtINR(r.laborSavings)}</td>
+      <td class="${drCls}">${pct(r.defReduction)}</td>
+      <td>${fmt(r.defPrevented)}</td>
+      <td><div class="badges">${badges||'—'}</div></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3)">No results found.</td></tr>';
+  document.getElementById('tableFooter').textContent = `Showing ${data.length} of ${ALL.length} components`;
+}
+
+function updateCharts(data) {
+  /* Lead Time */
+  const ltLabels = data.map(r => r.id);
+  const ltBefore = data.map(r => r.ltB);
+  const ltAfter  = data.map(r => r.ltA);
+  if (chartLT) { chartLT.destroy(); }
+  chartLT = new Chart(document.getElementById('chartLT'), {
+    type: 'bar',
+    data: { labels: ltLabels, datasets: [
+      { label: 'Before (Days)', data: ltBefore, backgroundColor: '#cbd5e1', borderRadius: 3 },
+      { label: 'After (Days)',  data: ltAfter,  backgroundColor: '#059669', borderRadius: 3 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw} days` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9a9a92' } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#9a9a92' } }
+      }
+    }
+  });
+
+  /* Financial */
+  const groups = {};
+  data.forEach(r => { groups[r.name] = (groups[r.name] || 0) + r.laborSavings; });
+  const finEntries = Object.entries(groups).sort((a,b) => b[1]-a[1]);
+  if (chartFin) { chartFin.destroy(); }
+  chartFin = new Chart(document.getElementById('chartFin'), {
+    type: 'bar',
+    data: { labels: finEntries.map(e => e[0]), datasets: [{
+      label: 'Labour Savings (INR)',
+      data: finEntries.map(e => e[1]),
+      backgroundColor: finEntries.map(e => CAT_COLORS[e[0]] || '#059669'),
+      borderRadius: 4,
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + fmt(ctx.raw) } } },
+      scales: {
+        x: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#9a9a92', callback: v => '₹' + (v/1000).toFixed(0) + 'K' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#5a5a54' } }
+      }
+    }
+  });
+
+  /* Quality */
+  const qSorted = [...data].sort((a,b) => b.dB - a.dB).slice(0, 20);
+  if (chartQual) { chartQual.destroy(); }
+  chartQual = new Chart(document.getElementById('chartQual'), {
+    type: 'bar',
+    data: { labels: qSorted.map(r => r.id), datasets: [
+      { label: 'Defects Before', data: qSorted.map(r => r.dB), backgroundColor: '#fda4af', borderRadius: 3 },
+      { label: 'Defects After',  data: qSorted.map(r => r.dA), backgroundColor: '#f43f5e', borderRadius: 3 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9a9a92' } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#9a9a92' } }
+      }
+    }
+  });
+}
+
+function updateInsights() {
+  const top3   = [...ALL].sort((a,b) => (b.laborSavings + b.defPrevented*100 + b.ltImprovement*200) - (a.laborSavings + a.defPrevented*100 + a.ltImprovement*200)).slice(0,3);
+  const bottom3= [...ALL].sort((a,b) => (a.defReduction + a.ltImprovement) - (b.defReduction + b.ltImprovement)).slice(0,3);
+
+  document.getElementById('top3').innerHTML = top3.map((r, i) => `
+    <div class="performer performer-top">
+      <span class="rank rank-gold">${i+1}</span>
+      <div>
+        <div class="perf-name">${r.id} · ${r.name}</div>
+        <div class="perf-stats">
+          <span class="perf-stat">↓ ${pct(r.ltImprovement)} lead time</span>
+          <span class="perf-stat">${fmtINR(r.laborSavings)} saved</span>
+          <span class="perf-stat">↓ ${pct(r.defReduction)} defects</span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('bottom3').innerHTML = bottom3.map(r => `
+    <div class="performer performer-low">
+      <span class="rank rank-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </span>
+      <div>
+        <div class="perf-name">${r.id} · ${r.name}</div>
+        <div class="perf-stats">
+          <span class="perf-stat-bad">${pct(r.ltImprovement)} LT improve</span>
+          <span class="perf-stat-bad">${pct(r.defReduction)} defect reduce</span>
+          <span class="perf-stat-bad">${r.dA} defects remain</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function applyFilters() {
+  const data = getFiltered();
+  updateKPIs(data);
+  updateTable(data);
+  updateCharts(data);
+}
+
+function sortTable(col) {
+  if (sortCol === col) { sortDir *= -1; }
+  else { sortCol = col; sortDir = -1; }
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  const el = document.getElementById('th-' + col);
+  if (el) {
+    el.classList.add('sorted');
+    el.querySelector('.sort-icon').textContent = sortDir === -1 ? '↓' : '↑';
+  }
+  applyFilters();
+}
+
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['leadtime','financial','quality'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? 'block' : 'none';
+  });
+  setTimeout(() => { if (chartLT) chartLT.resize(); if (chartFin) chartFin.resize(); if (chartQual) chartQual.resize(); }, 50);
+}
+
+// Init
+document.getElementById('th-laborSavings').classList.add('sorted');
+document.getElementById('th-laborSavings').querySelector('.sort-icon').textContent = '↓';
+updateInsights();
+applyFilters();
+</script>
+</body>
+</html>
